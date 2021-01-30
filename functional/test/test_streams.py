@@ -6,6 +6,7 @@ import gzip
 from platform import system
 import lzma
 import bz2
+from pathlib import Path
 
 from functional import seq, pseq
 from functional.streams import Stream, ParallelStream
@@ -33,21 +34,24 @@ class TestStreams(unittest.TestCase):
         expect = ["line0\n", "line1\n", "line2"]
         self.assertListEqual(
             expect,
-            self.seq.open("functional/test/data/test.txt.gz", mode="rt").to_list(),
+            self.seq.open("functional/test/data/test.txt.gz",
+                          mode="rt").to_list(),
         )
 
     def test_open_bz2(self):
         expect = ["line0\n", "line1\n", "line2"]
         self.assertListEqual(
             expect,
-            self.seq.open("functional/test/data/test.txt.bz2", mode="rt").to_list(),
+            self.seq.open("functional/test/data/test.txt.bz2",
+                          mode="rt").to_list(),
         )
 
     def test_open_xz(self):
         expect = ["line0\n", "line1\n", "line2"]
         self.assertListEqual(
             expect,
-            self.seq.open("functional/test/data/test.txt.xz", mode="rt").to_list(),
+            self.seq.open("functional/test/data/test.txt.xz",
+                          mode="rt").to_list(),
         )
 
     def test_disable_compression(self):
@@ -126,17 +130,20 @@ class TestStreams(unittest.TestCase):
         self.assertEqual(expect_1, result_1)
 
     def test_gzip_jsonl(self):
-        result_0 = self.seq.jsonl("functional/test/data/test.jsonl.gz").to_list()
+        result_0 = self.seq.jsonl(
+            "functional/test/data/test.jsonl.gz").to_list()
         expect_0 = [[1, 2, 3], {"a": 1, "b": 2, "c": 3}]
         self.assertEqual(expect_0, result_0)
 
     def test_bz2_jsonl(self):
-        result_0 = self.seq.jsonl("functional/test/data/test.jsonl.bz2").to_list()
+        result_0 = self.seq.jsonl(
+            "functional/test/data/test.jsonl.bz2").to_list()
         expect_0 = [[1, 2, 3], {"a": 1, "b": 2, "c": 3}]
         self.assertEqual(expect_0, result_0)
 
     def test_xz_jsonl(self):
-        result_0 = self.seq.jsonl("functional/test/data/test.jsonl.xz").to_list()
+        result_0 = self.seq.jsonl(
+            "functional/test/data/test.jsonl.xz").to_list()
         expect_0 = [[1, 2, 3], {"a": 1, "b": 2, "c": 3}]
         self.assertEqual(expect_0, result_0)
 
@@ -367,7 +374,8 @@ class TestStreams(unittest.TestCase):
     def test_to_csv_win(self):
         tmp_path = "functional/test/data/tmp/output.txt"
         elements = [[1, 2, 3], [4, 5, 6], ["a", "b", "c"]]
-        expect = [["1", "2", "3"], [], ["4", "5", "6"], [], ["a", "b", "c"], []]
+        expect = [["1", "2", "3"], [], [
+            "4", "5", "6"], [], ["a", "b", "c"], []]
         sequence = self.seq(elements)
         sequence.to_csv(tmp_path)
         result = self.seq.csv(tmp_path).to_list()
@@ -409,7 +417,8 @@ class TestStreams(unittest.TestCase):
         elements = [(1, "Tom"), (2, "Jack"), (3, "Jane"), (4, "Stephan")]
 
         self.seq(elements).to_sqlite3(tmp_path, insert_sql)
-        result = self.seq.sqlite3(tmp_path, "SELECT id, name FROM user;").to_list()
+        result = self.seq.sqlite3(
+            tmp_path, "SELECT id, name FROM user;").to_list()
         self.assertListEqual(elements, result)
 
     def test_to_sqlite3_query(self):
@@ -421,7 +430,8 @@ class TestStreams(unittest.TestCase):
 
             insert_sql = "INSERT INTO user (id, name) VALUES (?, ?)"
             self.seq(elements).to_sqlite3(conn, insert_sql)
-            result = self.seq.sqlite3(conn, "SELECT id, name FROM user;").to_list()
+            result = self.seq.sqlite3(
+                conn, "SELECT id, name FROM user;").to_list()
             self.assertListEqual(elements, result)
 
     def test_to_sqlite3_tuple(self):
@@ -433,7 +443,8 @@ class TestStreams(unittest.TestCase):
 
             table_name = "user"
             self.seq(elements).to_sqlite3(conn, table_name)
-            result = self.seq.sqlite3(conn, "SELECT id, name FROM user;").to_list()
+            result = self.seq.sqlite3(
+                conn, "SELECT id, name FROM user;").to_list()
             self.assertListEqual(elements, result)
 
     def test_to_sqlite3_namedtuple(self):
@@ -452,7 +463,8 @@ class TestStreams(unittest.TestCase):
             self.seq(elements).map(lambda u: user(u[0], u[1])).to_sqlite3(
                 conn, table_name
             )
-            result = self.seq.sqlite3(conn, "SELECT id, name FROM user;").to_list()
+            result = self.seq.sqlite3(
+                conn, "SELECT id, name FROM user;").to_list()
             self.assertListEqual(elements, result)
 
         # test namedtuple with different order
@@ -466,7 +478,8 @@ class TestStreams(unittest.TestCase):
             self.seq(elements).map(lambda u: user(u[1], u[0])).to_sqlite3(
                 conn, table_name
             )
-            result = self.seq.sqlite3(conn, "SELECT id, name FROM user;").to_list()
+            result = self.seq.sqlite3(
+                conn, "SELECT id, name FROM user;").to_list()
             self.assertListEqual(elements, result)
 
     def test_to_sqlite3_dict(self):
@@ -480,7 +493,8 @@ class TestStreams(unittest.TestCase):
             self.seq(elements).map(lambda x: {"id": x[0], "name": x[1]}).to_sqlite3(
                 conn, table_name
             )
-            result = self.seq.sqlite3(conn, "SELECT id, name FROM user;").to_list()
+            result = self.seq.sqlite3(
+                conn, "SELECT id, name FROM user;").to_list()
             self.assertListEqual(elements, result)
 
     def test_to_sqlite3_typerror(self):
@@ -503,7 +517,8 @@ class TestStreams(unittest.TestCase):
             df_seq = self.seq(elements).to_pandas()
             self.assertTrue(df_seq.equals(df_expect))
 
-            df_expect = pd.DataFrame.from_records(elements, columns=["id", "name"])
+            df_expect = pd.DataFrame.from_records(
+                elements, columns=["id", "name"])
             df_seq = self.seq(elements).to_pandas(columns=["id", "name"])
             self.assertTrue(df_seq.equals(df_expect))
 
@@ -518,8 +533,29 @@ class TestStreams(unittest.TestCase):
         except ImportError:
             print("pandas not installed, skipping unit test")
 
+    def test_filesystem(self):
+        files = self.seq.filesystem("functional").to_list()
+        self.assertGreater(len(files), 0)
+
+    def test_filesystem_filter_files(self):
+        files = self.seq.filesystem("functional/test", "test_s*.py").to_list()
+        self.assertTrue(Path("functional/test/test_streams.py") in files)
+
+    def test_filesystem_dirs_only(self):
+        dirs = self.seq.filesystem("functional", "**").to_list()
+        self.assertTrue(Path("functional/test") in dirs)
+        self.assertTrue(all(d.is_dir() for d in dirs))
+
+    def test_filesystem_level(self):
+        dirs = self.seq.filesystem("functional", "**", level=2).to_list()
+        self.assertTrue(Path("functional/test") in dirs)
+        self.assertFalse(Path("functional/test/data") in dirs)
+        with self.assertRaises(TypeError):
+            self.seq.filesystem("functional", "**", level='1').to_list()
 
 # Skipping tests on pypy because of https://github.com/uqfoundation/dill/issues/73
+
+
 @unittest.skipIf("__pypy__" in sys.builtin_module_names, "Skip parallel tests on pypy")
 class TestParallelStreams(TestStreams):
     def setUp(self):

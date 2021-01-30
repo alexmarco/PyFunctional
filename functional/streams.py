@@ -4,6 +4,8 @@ import json as jsonapi
 import sqlite3 as sqlite3api
 import builtins
 
+from pathlib import Path
+
 from functional.execution import ExecutionEngine, ParallelExecutionEngine
 from functional.pipeline import Sequence
 from functional.util import is_primitive
@@ -243,7 +245,33 @@ class Stream(object):
         else:
             return self(json_input.items())
 
+    def filesystem(self, base_dir=None, wildcard=None, level=None):
+        """
+        List files in filesystem.
+
+        >>> len(seq.filesystem('./test/*.py').to_list()) > 0
+        True
+
+        :param wilcard: string that match paths in underlying filesystem.
+        :param base_dir: string that points to a dir.
+
+        """
+        path = Path(base_dir or Path())
+        if not path.exists():
+            raise ValueError(
+                f"`base_dir` {str(base_dir)!r} don't exists in filesystem.")
+
+        if level is not None:
+            if isinstance(level, int):
+                return self(p for p in path.rglob(wildcard or "*")
+                            if len(p.parents) <= level)
+            else:
+                raise TypeError(
+                    f"`level` must be `int` type, given {type(level)}.")
+        return self(path.rglob(wildcard or "*"))
+
     # pylint: disable=keyword-arg-before-vararg
+
     def sqlite3(self, conn, sql, parameters=None, *args, **kwargs):
         """
         Reads input by querying from a sqlite database.
@@ -282,7 +310,8 @@ class ParallelStream(Stream):
         :param processes: Number of parallel processes
         :param disable_compression: Disable file compression detection
         """
-        super(ParallelStream, self).__init__(disable_compression=disable_compression)
+        super(ParallelStream, self).__init__(
+            disable_compression=disable_compression)
         self.processes = processes
         self.partition_size = partition_size
 
